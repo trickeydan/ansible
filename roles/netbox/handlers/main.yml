@@ -1,0 +1,4 @@
+- name: restart netbox
+  shell:
+    chdir: /opt/netbox
+    cmd: "{{ docker_update_command }}"

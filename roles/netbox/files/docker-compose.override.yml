@@ -1,0 +1,38 @@
+services:
+  netbox:
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.netbox.rule=Host(`netbox.{{ vault_services_domain }}`)
+      - traefik.http.routers.netbox.tls.certresolver=le
+      - traefik.http.services.netbox-netbox.loadbalancer.server.port=8080
+      - traefik.http.middlewares.netbox-ratelimit.ratelimit.average=5
+      - traefik.http.middlewares.netbox-ratelimit.ratelimit.burst=1000
+      - traefik.http.routers.netbox.middlewares=netbox-ratelimit
+    environment:
+      - TIMEZONE={{ ntp_timezone }}
+      - REMOTE_AUTH_ENABLED=true
+      - REMOTE_AUTH_BACKEND=social_core.backends.open_id_connect.OpenIdConnectAuth
+      - SOCIAL_AUTH_OIDC_ENDPOINT=https://{{ vault_authentik_domain }}/application/o/netbox
+      - SOCIAL_AUTH_OIDC_KEY={{ vault_netbox_oidc_client_id }}
+      - SOCIAL_AUTH_OIDC_SECRET={{ vault_netbox_oidc_client_secret }}
+      - LOGOUT_REDIRECT_URL=https://{{ vault_authentik_domain }}/application/o/netbox/end-session/
+    extra_hosts:
+      - "{{ vault_authentik_domain }}:10.111.0.2"
+    restart: unless-stopped
+  netbox-worker:
+    restart: unless-stopped
+  netbox-housekeeping:
+    restart: unless-stopped
+  postgres:
+    restart: unless-stopped
+  redis:
+    restart: unless-stopped
+  redis-cache:
+    restart: unless-stopped
+
+networks:
+  traefik:
+    external: true

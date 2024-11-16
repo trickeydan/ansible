@@ -13,4 +13,5 @@
     - geerlingguy.docker
     - docker_cleanup
     - authentik
+    - netbox
     - traefik

@@ -1,0 +1,29 @@
+- name: Include vault
+  include_vars: vault.yml
+  tags: netbox
+
+- name: checkout netbox-docker into /opt/netbox
+  git:
+    repo: https://github.com/netbox-community/netbox-docker.git
+    dest: /opt/netbox
+    version: 3.0.2
+  tags: netbox
+
+- name: Install extra config
+  template:
+    src: files/configuration.py
+    dest: /opt/netbox/configuration/ansible.py
+    mode: "{{ docker_compose_file_mask }}"
+    owner: "{{ docker_user.name }}"
+  notify: restart netbox
+  tags: netbox
+
+- name: Install compose file
+  template:
+    src: files/docker-compose.override.yml
+    dest: /opt/netbox/docker-compose.override.yml
+    mode: "{{ docker_compose_file_mask }}"
+    owner: "{{ docker_user.name }}"
+    validate: docker-compose -f %s config
+  notify: restart netbox
+  tags: netbox
