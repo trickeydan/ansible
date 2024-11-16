@@ -1,0 +1,17 @@
+- name: Install nftables
+  apt:
+    name:
+      - nftables
+    state: present
+  become: true
+  tags: firewall
+
+- name: Update Firewall config
+  template:
+    src: firewall/{{ inventory_hostname }}.conf
+    dest: /etc/nftables.conf
+    validate: nft -c -f %s
+    mode: "0755"
+  notify:
+    - reload firewall
+  tags: firewall

@@ -1,0 +1,27 @@
+- name: Add Zabbly APT repo
+  ansible.builtin.deb822_repository:
+    name: zabbly-incus-stable
+    types: [deb]
+    uris: https://pkgs.zabbly.com/incus/stable
+    components: [main]
+    signed_by: https://pkgs.zabbly.com/key.asc
+    suites: ["{{ ansible_distribution_release }}"]
+    state: present
+    enabled: true
+  notify:
+    - Update APT cache
+  become: true
+  tags: incus
+
+- name: Install Incus
+  apt:
+    name:
+      - incus
+    state: present
+  become: true
+  tags: incus
+
+- name: Enable IPv4 forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.conf.all.forwarding
+    value: 1

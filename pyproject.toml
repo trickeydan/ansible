@@ -1,0 +1,21 @@
+[project]
+name = "dgt-ansible"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ansible>=10.6.0",
+]
+
+[dependency-groups]
+dev = [
+    "ansible-lint>=6.16",
+    "yamllint>=1.35.1",
+]
+
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]

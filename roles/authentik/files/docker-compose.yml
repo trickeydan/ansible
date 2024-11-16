@@ -1,0 +1,71 @@
+x-env: &env
+  - TIMEZONE={{ ntp_timezone }}
+  - AUTHENTIK_REDIS__HOST=redis
+  - AUTHENTIK_POSTGRESQL__HOST=db
+  - AUTHENTIK_POSTGRESQL__USER=authentik
+  - AUTHENTIK_POSTGRESQL__NAME=authentik
+  - AUTHENTIK_POSTGRESQL__PASSWORD=authentik
+  - AUTHENTIK_SECRET_KEY="{{ authentik_secret_key }}"
+  - AUTHENTIK_WEB__WORKERS=1
+  - AUTHENTIK_DISABLE_UPDATE_CHECK=true
+  - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+  - AUTHENTIK_DISABLE_STARTUP_ANALYTICS=true
+
+services:
+  server:
+    image: ghcr.io/goauthentik/server:2024.10
+    restart: unless-stopped
+    command: server
+    user: "{{ docker_user.id }}"
+    environment: *env
+    volumes:
+      - "{{ app_data_dir }}/authentik/media:/media"
+      - "{{ app_data_dir }}/authentik/custom-templates:/templates"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authentik.rule=Host(`{{ vault_authentik_domain }}`)
+      - traefik.http.routers.authentik.tls.certresolver=le
+      - traefik.http.services.authentik-authentik.loadbalancer.server.port=9000
+      - traefik.http.middlewares.authentik-ratelimit.ratelimit.average=5
+      - traefik.http.middlewares.authentik-ratelimit.ratelimit.burst=1000
+      - traefik.http.routers.authentik.middlewares=authentik-ratelimit
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+      - traefik
+
+  worker:
+    image: ghcr.io/goauthentik/server:2024.10
+    restart: unless-stopped
+    command: worker
+    user: "{{ docker_user.id }}"
+    environment: *env
+    volumes:
+      - "{{ app_data_dir }}/authentik/media:/media"
+      - "{{ app_data_dir }}/authentik/certs:/certs"
+      - "{{ app_data_dir }}/authentik/custom-templates:/templates"
+    depends_on:
+      - db
+      - redis
+      - server
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    volumes:
+      - "{{ app_data_dir }}/dbs/postgres/authentik:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_PASSWORD=authentik
+      - POSTGRES_USER=authentik
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - "{{ app_data_dir }}/dbs/redis/authentik:/data"
+
+networks:
+  traefik:
+    external: true

@@ -1,0 +1,7 @@
+.venv/
+.vscode/
+
+TODO.md
+
+galaxy_collections/
+galaxy_roles/
