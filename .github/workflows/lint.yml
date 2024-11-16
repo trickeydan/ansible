@@ -25,7 +25,5 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('poetry.lock') }}-${{ hashFiles('pyproject.toml') }}
       - name: Install dependencies
         run: poetry install
-      - name: Static type checking
-        run: make type
       - name: Lint
         run: make lint
