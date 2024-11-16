@@ -1,0 +1,46 @@
+services:
+  tandoor:
+    image: vabene1111/recipes:latest
+    environment:
+      - TZ={{ ntp_timezone }}
+      - DEBUG=0
+      - ALLOWED_HOSTS=recipes.{{ vault_home_domain }}
+      - SECRET_KEY={{ vault_tandoor_secret_key }}
+      - DATABASE_URL=postgres://tandoor:tandoor@db:5432/tandoor
+      - DB_ENGINE=django.db.backends.postgresql
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=tandoor
+      - POSTGRES_PASSWORD=tandoor
+      - GUNICORN_MEDIA=1
+      - SOCIAL_PROVIDERS=allauth.socialaccount.providers.openid_connect
+      - "SOCIALACCOUNT_PROVIDERS={'openid_connect': { 'OAUTH_PKCE_ENABLED': True, 'APPS': [ { 'provider_id': 'oidc', 'name': '{{ vault_authentik_brand }}', 'client_id': 'PyUenh4QyD7mAFswoIN3thiheOU5QPruUwG5Ji0U', 'secret': 'cQOHvMMAblJIlGp9jexEqE1Ts5hZkOZhW3xBFghv0ZxuxmeFIM6uPyhOc3J0WU8OEuD9mZapxTCbMVclPFlCPyEhbQPOUVZmMUbqosTymFVCyzNtYX1ipFiGpbmIx1iF', 'settings': { 'server_url': 'https://{{ vault_authentik_domain }}/application/o/tandoor/.well-known/openid-configuration' } } ] } }"
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tandoor.rule=Host(`recipes.{{ vault_home_domain }}`)
+      - traefik.http.routers.tandoor.tls.certresolver=le
+    depends_on:
+      - db
+    networks:
+      - default
+      - traefik
+    extra_hosts:
+      - "{{ vault_authentik_domain }}:10.111.0.2"
+    volumes:
+      - "{{ app_data_dir }}/tandoor/media:/opt/recipes/mediafiles"
+    tmpfs:
+      - /opt/recipes/staticfiles
+
+  db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    volumes:
+      - "{{ app_data_dir }}/dbs/postgres/tandoor/:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_PASSWORD=tandoor
+      - POSTGRES_USER=tandoor
+
+networks:
+  traefik:
+    external: true

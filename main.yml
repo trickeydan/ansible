@@ -15,4 +15,5 @@
     - authentik
     - netbox
     - prometheus
+    - tandoor
     - traefik
