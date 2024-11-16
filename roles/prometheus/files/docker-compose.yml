@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+    prometheus:
+        image: prom/prometheus:v3.0.0
+        restart: always
+        user: "{{ docker_user.id }}"
+        volumes:
+          - ./prometheus/:/etc/prometheus/
+          - ./data:/prometheus
+        command:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus'
+        #   - ' --storage.tsdb.retention.time 1y'
+          - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+          - '--web.console.templates=/usr/share/prometheus/consoles'
+        networks:
+            - default
+            - traefik
+        labels:
+          - traefik.enable=true
+          - traefik.http.routers.prometheus.rule=Host(`prom.{{ vault_services_domain }}`)
+          - traefik.http.routers.prometheus.tls.certresolver=le
+          - traefik.http.services.prometheus-prometheus.loadbalancer.server.port=9090
+          - traefik.http.middlewares.prometheus-ratelimit.ratelimit.average=5
+          - traefik.http.middlewares.prometheus-ratelimit.ratelimit.burst=1000
+          - traefik.http.routers.prometheus.middlewares=prometheus-ratelimit
+
+networks:
+    traefik:
+        external: true
