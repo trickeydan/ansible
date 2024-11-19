@@ -17,6 +17,7 @@
   apt:
     name:
       - incus
+      - incus-ui-canonical
     state: present
   become: true
   tags: incus
