@@ -1,0 +1,46 @@
+services:
+  vikunja:
+    image: vikunja/vikunja:latest
+    restart: unless-stopped
+    environment:
+      - VIKUNJA_DATABASE_HOST=db
+      - VIKUNJA_DATABASE_PASSWORD=vikunja
+      - VIKUNJA_DATABASE_TYPE=postgres
+      - VIKUNJA_DATABASE_USER=vikunja
+      - VIKUNJA_DATABASE_DATABASE=vikunja
+      - VIKUNJA_SERVICE_FRONTENDURL=https://tasks.{{ vault_home_domain }}
+      - VIKUNJA_SERVICE_JWTSECRET="{{ vault_vikunja_jwt_secret }}"
+      - VIKUNJA_SERVICE_ENABLEREGISTRATION=false
+      - VIKUNJA_SERVICE_TIMEZONE={{ ntp_timezone }}
+      - VIKUNJA_LOG_PATH=/dev/stdout
+      - VIKUNJA_SENTRY_DSN=
+      - TZ={{ ntp_timezone }}
+      - PUID={{ docker_user.id }}
+      - PGID={{ docker_user.id }}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vikunja.rule=Host(`tasks.{{ vault_home_domain }}`)
+      - traefik.http.routers.vikunja.tls.certresolver=le
+    volumes:
+      - "{{ app_data_dir }}/vikunja/files:/app/vikunja/files"
+      - ./config.yml:/etc/vikunja/config.yml
+    depends_on:
+      - db
+    networks:
+      - default
+      - traefik
+    extra_hosts:
+      - "{{ vault_authentik_domain }}:10.111.0.2"
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    volumes:
+      - "{{ app_data_dir }}/postgres/vikunja/:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_PASSWORD=vikunja
+      - POSTGRES_USER=vikunja
+
+networks:
+  traefik:
+    external: true

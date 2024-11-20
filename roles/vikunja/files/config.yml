@@ -1,0 +1,13 @@
+auth:
+  local:
+    enabled: false
+  openid:
+    enabled: true
+    redirecturl: "https://tasks.{{ vault_home_domain }}/auth/openid/"
+    providers:
+      - name: {{ vault_authentik_brand }}
+        authurl: "https://{{ vault_authentik_domain }}/application/o/vikunja/"
+        logouturl: "https://{{ vault_authentik_domain }}/application/o/vikunja/end-session/"
+        clientid: "{{ vault_vikunja_oidc_client_id }}"
+        clientsecret: "{{ vault_vikunja_oidc_client_secret }}"
+        scope: "openid email profile vikunja_teams"
