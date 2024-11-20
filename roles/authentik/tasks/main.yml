@@ -1,5 +1,6 @@
 - name: Include vault
   include_vars: vault.yml
+  tags: authentik
 
 - name: Create install directory
   file:
@@ -7,6 +8,7 @@
     state: directory
     owner: "{{ docker_user.name }}"
     mode: "{{ docker_compose_directory_mask }}"
+  tags: authentik
 
 - name: Install compose file
   template:
@@ -16,3 +18,4 @@
     owner: "{{ docker_user.name }}"
     validate: docker-compose -f %s config
   notify: restart authentik
+  tags: authentik
