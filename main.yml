@@ -14,7 +14,7 @@
     - docker_cleanup
     - authentik
     - netbox
-    # - prometheus
+    - prometheus
     - tandoor
     - traefik
     - vikunja
