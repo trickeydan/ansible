@@ -8,9 +8,14 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 8080:8080
     depends_on:
       - docker_proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.dck-par.{{ vault_infra_domain }}`)
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik.tls.certresolver=le
+      - traefik.http.routers.traefik.middlewares=authentik
     networks:
       - default
       - traefik

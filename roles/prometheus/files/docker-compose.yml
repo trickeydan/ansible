@@ -22,7 +22,7 @@ services:
           - traefik.http.routers.prometheus.rule=Host(`prom.{{ vault_services_domain }}`)
           - traefik.http.routers.prometheus.tls.certresolver=le
           - traefik.http.services.prometheus-prometheus.loadbalancer.server.port=9090
-          - "traefik.http.routers.prometheus.middlewares=authentik"
+          - traefik.http.routers.prometheus.middlewares=authentik
 
 networks:
     traefik:
